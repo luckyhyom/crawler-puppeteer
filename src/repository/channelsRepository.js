@@ -51,8 +51,3 @@ export async function update(where, setColmns) {
     const [result] = await db.query(sql);
     return result;
 }
-
-/**
- * varchar vs text
- * https://sir.kr/qa/250669
- */
