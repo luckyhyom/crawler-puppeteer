@@ -1,7 +1,13 @@
+export const fitValueInSql = (value) => {
+    if (value === undefined) return 'NULL';
+    if (typeof value !== 'string') return value;
+    const arr = value.match(/\"/g);
+    if (arr) for (const escape in arr) value.replace(escape, "'");
+    return `"${value}"`
+}
+
 export const In = (values) => {
-    const result = values.map((value) => {
-        return typeof value === 'string' ? `'${value}'` : `${value}`
-    })
+    const result = values.map((value) => fitValueInSql(value));
     return `In(${result.join()})`;
 }
 
@@ -14,7 +20,7 @@ export const transformWhereCondition = (columns) => {
             conditions.push(`${columnName} ${value}`);
             continue;
         }
-        const condition = typeof value === 'string' ? `'${value}'` : `${value}`;
+        const condition = fitValueInSql(value);
         const result = `${columnName} = ${condition}`;
         conditions.push(result);
     }
@@ -22,11 +28,11 @@ export const transformWhereCondition = (columns) => {
     return condition;
 }
 
-export const transfromSetSelectedList = (setColmns) => {
+export const transformSetSelectedList = (setColmns) => {
     const updateList = [];
     for (let columnName in setColmns) {
         const value = setColmns[columnName];
-        const updateValue = typeof value === 'string' ? `'${value}'` : `${value}`;
+        const updateValue = fitValueInSql(value);
         const result = `${columnName} = ${updateValue}`;
         updateList.push(result);
     }
