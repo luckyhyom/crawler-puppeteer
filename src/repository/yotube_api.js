@@ -2,7 +2,7 @@ import * as config from '../config.js';
 import fetch from 'node-fetch';
 
 export const searchTitle = async (title) => {
-    const request = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&key=${config.YOUTUBE_API_KEY1}&type=channel&maxResults=10&q=${title}`);
+    const request = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&key=${config.YOUTUBE_API_KEY()}&type=channel&maxResults=10&q=${title}`);
     const channelList = await request.json();
     const result = channelList.items.map((channel) => {
         return {
@@ -17,7 +17,7 @@ export const searchTitle = async (title) => {
 };
 
 export const getCurrentViewAndSubAccCount = async (channel_id) => {
-    const res = await fetch(`https://youtube.googleapis.com/youtube/v3/channels?part=id&part=snippet&part=topicDetails&part=statistics&part=contentDetails&id=${channel_id}&key=${config.YOUTUBE_API_KEY1}`);
+    const res = await fetch(`https://youtube.googleapis.com/youtube/v3/channels?part=id&part=snippet&part=topicDetails&part=statistics&part=contentDetails&id=${channel_id}&key=${config.YOUTUBE_API_KEY()}`);
     const result = await res.json();
     if (result?.error?.code) return;
     let category;
@@ -28,7 +28,7 @@ export const getCurrentViewAndSubAccCount = async (channel_id) => {
         channel_id,
         subscriber_count: result.items[0].statistics.subscriberCount,
         video_count: result.items[0].statistics.videoCount,
-        view_count: result.items[0].statistics.viewCount,
+        total_view_count: result.items[0].statistics.viewCount,
         category: category.join(),
     }
     return channelData;
