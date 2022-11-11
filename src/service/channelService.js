@@ -1,3 +1,4 @@
+import * as timer from '../utils/timer.js';
 import * as channelsRepository from '../repository/channelsRepository.js';
 import * as channelHistoryRepository from '../repository/channelHistoryRepository.js';
 import * as youtubeApi from '../repository/yotube_api.js';
@@ -11,7 +12,6 @@ export const getManyByTitle = async (title) => {
 
 async function createChannelsBy(title) {
     const channelListFrom = await youtubeApi.searchTitle(title);
-
     const channelListAddedSubInfo = channelListFrom.map(async (channel) => {
         const existedChannel = await channelsRepository.getOneEqual({ channel_id: channel.channel_id });
         if (existedChannel) {
@@ -32,19 +32,27 @@ async function createChannelsBy(title) {
 }
 
 async function addViewAndSubCount(channel) {
-    let addedData = await channelHistoryRepository.getOneEqual({ channel_id: channel.channel_id });
-    const now = new Date();
-    const nowDate = now.getFullYear() + '-' + now.getMonth() + '-' + now.getDate();
-    if (addedData.date !== nowDate) addedData = await createChannelHistory(channel.channel_id);
-    channel.subscriber_count = addedData.subscriber_count;
-    channel.video_count = addedData.video_count;
-    channel.view_count = addedData.view_count;
-    channel.category = addedData.category;
+    const addedData = await channelHistoryRepository.getOneEqual({ channel_id: channel.channel_id });
+    const nowDate = timer.getPast();
+
+    if (addedData?.date !== nowDate) {
+        const history = await createChannelHistory(channel.channel_id, addedData?.total_view_count ?? 0);
+        if (history) for (const key in history) addedData[key] = history[key];
+    }
+
+    if (addedData) for (const key in addedData) channel[key] = addedData[key];
     return channel;
 }
 
-async function createChannelHistory(channel_id) {
-    const viewAndSubCount = await youtubeApi.getViewAndSubAccCount(channel_id);
-    await channelHistoryRepository.saveOne(viewAndSubCount);
+async function createChannelHistory(channel_id, total_view_count) {
+    const viewAndSubCount = await youtubeApi.getCurrentViewAndSubAccCount(channel_id);
+    await channelHistoryRepository.saveOne({
+        channel_id: viewAndSubCount.channel_id,
+        daily_view_count: viewAndSubCount.view_count,
+        total_view_count,
+        subscriber_count: viewAndSubCount.subscriber_count,
+        video_count: viewAndSubCount.video_count,
+        date: timer.getPast(),
+    });
     return viewAndSubCount;
 }
