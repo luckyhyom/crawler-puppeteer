@@ -16,9 +16,10 @@ export const searchTitle = async (title) => {
     return result;
 };
 
-export const getViewAndSubAccCount = async (channel_id) => {
+export const getCurrentViewAndSubAccCount = async (channel_id) => {
     const res = await fetch(`https://youtube.googleapis.com/youtube/v3/channels?part=id&part=snippet&part=topicDetails&part=statistics&part=contentDetails&id=${channel_id}&key=${config.YOUTUBE_API_KEY1}`);
     const result = await res.json();
+    if (result?.error?.code) return;
     let category;
     if (result?.items === undefined) category = undefined;
     else category = result.items[0].topicDetails.topicCategories.map(url => url.split('\/').slice(-1)[0]);
