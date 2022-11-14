@@ -109,7 +109,7 @@ export async function getMonthlyRevenue(channel_id: string): Promise<GetChannelM
     });
 
     map.forEach((value) => {
-        value.profitPerShare = value.profitPerShare * channel.for_calc_revenue
+        value.profitPerShare = Math.floor((value.profitPerShare * channel.for_calc_revenue) / channel.max_supply);
         history.push(new ChannelMonthlyRevenueDto(value.date, value.profitPerShare));
     });
 

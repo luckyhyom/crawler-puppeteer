@@ -7,4 +7,5 @@ export type Channel = {
     published_at: string,
     category: string,
     for_calc_revenue: number,
+    max_supply: number,
 }
