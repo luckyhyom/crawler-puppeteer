@@ -4,7 +4,7 @@ import * as channelsRepository from '../repository/channelsRepository.js';
 import * as channelHistoryRepository from '../repository/channelHistoryRepository.js';
 
 
-export const collectFromNox = async (key) => {
+export const collectFromNox = async (key: string) => {
     const channels = await channelsRepository.find(['channel_id']);
     for (const channel of channels) {
         const date = timer.getPast(365);
@@ -19,7 +19,7 @@ export const collectFromNox = async (key) => {
                 total_view_count: 0,
                 subscriber_count: data.subscriber_count,
                 date: key,
-                video_count: 'NULL',
+                video_count: undefined,
             });
         }
     }

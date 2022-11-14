@@ -1,9 +1,11 @@
 import * as config from '../config.js';
 import fetch from 'node-fetch';
+import { YouTubeHistoryJSON, YouTubeHistoryResult, YouTubeSearchJSON } from './types/youtube_api.type.js';
+import { Channel } from './types/channel.type.js';
 
-export const searchTitle = async (title) => {
+export const searchTitle = async (title: string): Promise<Partial<Channel>[]> => {
     const request = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&key=${config.YOUTUBE_API_KEY()}&type=channel&maxResults=10&q=${title}`);
-    const channelList = await request.json();
+    const channelList = await request.json() as YouTubeSearchJSON;
     const result = channelList.items.map((channel) => {
         return {
             channel_id: channel.snippet.channelId,
@@ -16,13 +18,13 @@ export const searchTitle = async (title) => {
     return result;
 };
 
-export const getCurrentViewAndSubAccCount = async (channel_id) => {
+export const getCurrentViewAndSubAccCount = async (channel_id: string): Promise<YouTubeHistoryResult> => {
     const res = await fetch(`https://youtube.googleapis.com/youtube/v3/channels?part=id&part=snippet&part=topicDetails&part=statistics&part=contentDetails&id=${channel_id}&key=${config.YOUTUBE_API_KEY()}`);
-    const result = await res.json();
-    if (result?.error?.code) return;
-    let category;
-    if (result?.items === undefined) category = undefined;
-    else category = result.items[0].topicDetails.topicCategories.map(url => url.split('\/').slice(-1)[0]);
+    const result: YouTubeHistoryJSON = await res.json() as YouTubeHistoryJSON;
+    if (result?.error?.code) {
+        throw new Error('50501');
+    }
+    const category: string[] = result?.items[0]?.topicDetails?.topicCategories?.map(url => url.split('\/').slice(-1)[0]) ?? undefined;
 
     const channelData = {
         channel_id,
@@ -33,19 +35,3 @@ export const getCurrentViewAndSubAccCount = async (channel_id) => {
     }
     return channelData;
 };
-
-
-
-
-
-
-
-
-/**
- * https://www.googleapis.com/youtube/v3/search?part=snippet&key={API_KEY}&type=channel&maxResults=10&q=오킹
- * body.items[0].snippet.publidshedAt
- * body.items[0].snippet.channelId
- * body.items[0].snippet.title
- * body.items[0].snippet.description
- * body.items[0].snippet.thumbnails.medium.url
- */
