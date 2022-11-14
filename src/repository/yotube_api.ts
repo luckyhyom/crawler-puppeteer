@@ -22,16 +22,17 @@ export const getCurrentViewAndSubAccCount = async (channel_id: string): Promise<
     const res = await fetch(`https://youtube.googleapis.com/youtube/v3/channels?part=id&part=snippet&part=topicDetails&part=statistics&part=contentDetails&id=${channel_id}&key=${config.YOUTUBE_API_KEY()}`);
     const result: YouTubeHistoryJSON = await res.json() as YouTubeHistoryJSON;
     if (result?.error?.code) {
+        console.log(result?.error);
         throw new Error('50501');
     }
-    const category: string[] = result?.items[0]?.topicDetails?.topicCategories?.map(url => url.split('\/').slice(-1)[0]) ?? undefined;
+    const category: string[] = result?.items[0]?.topicDetails?.topicCategories?.map(url => url?.split('\/').slice(-1)[0]) ?? ['None'];
 
     const channelData = {
         channel_id,
         subscriber_count: result.items[0].statistics.subscriberCount,
         video_count: result.items[0].statistics.videoCount,
         total_view_count: result.items[0].statistics.viewCount,
-        category: category.join(),
+        category: category?.join() ?? undefined,
     }
     return channelData;
 };

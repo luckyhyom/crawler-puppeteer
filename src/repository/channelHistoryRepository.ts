@@ -1,5 +1,6 @@
 import { db } from '../database/database.js';
 import { ChannelHistory } from './types/channelHistory.type.js';
+import { GetManyChannelHistoryRes } from './types/dto/channel-history/getManyChannelHistory.dto.js';
 
 const tableName = 'channel_history';
 
@@ -13,7 +14,7 @@ export async function saveOne(arg: Partial<ChannelHistory>) {
     return result;
 }
 
-export async function getOneEqual(columns: Partial<ChannelHistory>) {
+export async function getOneEqual(columns: Partial<ChannelHistory>): Promise<ChannelHistory> {
     const conditions = [];
     for (let columnName in columns) {
         const value = columns[columnName as keyof typeof columns];
@@ -24,19 +25,16 @@ export async function getOneEqual(columns: Partial<ChannelHistory>) {
     const condition = conditions.join(' AND ');
     const query = `SELECT * FROM ${tableName} WHERE ${condition} ORDER BY date DESC LIMIT 1;`;
     const [result] = await db.query(query);
-    return result.length === 0 ? undefined : result;
+    return result.length === 0 ? undefined : result[0];
 }
 
 /**
- * 
- * @param {*} columns 
- * {
- *  name: 'ellie'
- * }
- * @returns 
+ * 2022-10-13T15:00:00.000Z { date: 2022-10-13T15:00:00.000Z, profitPerShare: 0 } key,value
+ * 쓰이는 date형식이 다르므로 이런 경우 Repo에서 변환하는 Dto를 주면 간편하다.
  */
-export async function getMany(channel_id: string) {
+export async function getMany(channel_id: string): Promise<GetManyChannelHistoryRes[]> {
     const query = `SELECT date, subscriber_count, daily_view_count FROM ${tableName} WHERE channel_id = "${channel_id}";`;
     const [result] = await db.query(query);
-    return result.length === 0 ? undefined : result;
+    return result.length === 0 ? undefined
+        : result.map((history: { date: string; subscriber: number; daily_view_count: number; }) => new GetManyChannelHistoryRes(history.date, history.subscriber, history.daily_view_count));
 }

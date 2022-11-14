@@ -4,20 +4,33 @@ import * as channelHistoryRepository from '../repository/channelHistoryRepositor
 import * as youtubeApi from '../repository/yotube_api.js';
 import { Channel } from '../repository/types/channel.type.js';
 import { YouTubeHistoryResult } from '../repository/types/youtube_api.type.js';
+import { ChannelDto } from '../dto/get.channels.dto.js';
+import { GetChannelHistoryRes } from '../dto/get.channel-history.dto.js';
+import { ChannelHistory } from '../repository/types/channelHistory.type.js';
+import { ChannelMonthlyRevenueDto, GetChannelMonthlyRevenueRes } from '../dto/get.channel-monthly-revenue.dto.js';
 
-export const getManyByTitle = async (title: string) => {
+// DTO 변경해야함
+export const getManyByTitle = async (title: string): Promise<ChannelDto[]> => {
     const channelList = await channelsRepository.getManyByTitle(title) ?? await createChannelsBy(title);
-    const added = channelList.map(async (channel: Channel) => await addViewAndSubCount(channel));
+    const added = channelList.map(async (channel: Channel) => {
+        const history = await channelHistoryRepository.getOneEqual({ channel_id: channel.channel_id });
+        const nowDate = timer.getPast();
+
+        if (history?.date === nowDate) {
+            return new ChannelDto(channel.channel_id, channel.thumbnail_url, history.subscriber_count, channel.channel_id, channel.published_at, channel.category);
+        } else {
+            const newHistory = await createChannelHistory(channel.channel_id);
+            return new ChannelDto(channel.channel_id, channel.thumbnail_url, newHistory.subscriber_count, channel.channel_id, channel.published_at, newHistory.category);
+        }
+    });
     const result = await Promise.all(added);;
     return result;
 }
 
-export const getOneByChannelId = async (channel_id: string) => {
-    //const channelList = await channelsRepository.getManyByTitle(title) ?? await createChannelsBy(title);
-    //const added = channelList.map(async (channel) => await addViewAndSubCount(channel));
-    //const result = await Promise.all(added);;
+export const getOneByChannelId = async (channel_id: string): Promise<ChannelDto> => {
     const channel = await channelsRepository.getOneEqual({ channel_id });
-    return channel;
+    const history = await channelHistoryRepository.getOneEqual({ channel_id: channel.channel_id });
+    return new ChannelDto(channel.channel_id, channel.thumbnail_url, history.subscriber_count, channel.channel_id, channel.published_at, channel.category);
 }
 
 async function createChannelsBy(title: string) {
@@ -41,38 +54,24 @@ async function createChannelsBy(title: string) {
     return result;
 }
 
-async function addViewAndSubCount(channel: Channel) {
-    const gotone = await channelHistoryRepository.getOneEqual({ channel_id: channel.channel_id });
-    const addedData = gotone[0];
-    const nowDate = timer.getPast();
-    if (addedData?.date !== nowDate) {
-        const history = await createChannelHistory(channel.channel_id, addedData?.daily_view_count ?? 0);
-        if (history) for (const key in history) addedData[key] = history[key as keyof typeof history];
-    }
-    if (addedData) for (const key in addedData) {
-        const value = addedData[key]; // channel[key] = addedData[key]
-        if (key === 'date') channel.channel_id = value;
-        else if (key === 'subscriber_count') channel.title = value;
-        else if (key === 'daily_view_count') channel.description = value;
-        else if (key === 'total_view_count') channel.thumbnail_url = value;
-        else if (key === 'video_count') channel.published_at = value;
-    }
-    return channel;
-}
-
-async function createChannelHistory(channel_id: string, daily_view_count: number): Promise<YouTubeHistoryResult> {
+async function createChannelHistory(channel_id: string): Promise<YouTubeHistoryResult> {
     try {
         const viewAndSubCount = await youtubeApi.getCurrentViewAndSubAccCount(channel_id);
         await channelHistoryRepository.saveOne({
             channel_id: viewAndSubCount.channel_id,
-            daily_view_count,
+            daily_view_count: 0,
             total_view_count: viewAndSubCount.total_view_count,
             subscriber_count: viewAndSubCount.subscriber_count,
             video_count: viewAndSubCount.video_count,
             date: timer.getPast(),
         });
+        await channelsRepository.update({
+            channel_id,
+        }, { category: viewAndSubCount.category })
         return viewAndSubCount;
     } catch (error) {
+        console.log(error);
+
         return {
             channel_id,
             total_view_count: 0,
@@ -83,7 +82,37 @@ async function createChannelHistory(channel_id: string, daily_view_count: number
     }
 }
 
+export async function getHistory(channel_id: string): Promise<GetChannelHistoryRes[]> {
+    const result = await channelHistoryRepository.getMany(channel_id);
+    return result.map((history) => new GetChannelHistoryRes(history.date, history.daily_view_count, history.subscriber_count));
+}
 
-export async function getHistory(channel_id: string) {
-    return await channelHistoryRepository.getMany(channel_id);
+export async function getMonthlyRevenue(channel_id: string): Promise<GetChannelMonthlyRevenueRes> {
+    const historyList = await channelHistoryRepository.getMany(channel_id);
+    const map = new Map<string, { date: string, profitPerShare: number }>();
+    const history: ChannelMonthlyRevenueDto[] = [];
+    const channel = await channelsRepository.getOneEqual({ channel_id });
+
+    const years: string[] = historyList.map(item => {
+        if (!map.get(item.getMonth())) {
+            map.set(item.getMonth(), {
+                date: item.getMonth(),
+                profitPerShare: item.daily_view_count,
+            });
+            return item.getMonth();
+        }
+        map.set(item.getMonth(), {
+            date: item.getMonth(),
+            profitPerShare: map.get(item.getMonth())!.profitPerShare + item.daily_view_count,
+        });
+        return item.getMonth();
+    });
+
+    map.forEach((value) => {
+        value.profitPerShare = value.profitPerShare * channel.for_calc_revenue
+        history.push(new ChannelMonthlyRevenueDto(value.date, value.profitPerShare));
+    });
+
+    return new GetChannelMonthlyRevenueRes(history.sort((a, b) => +new Date(a.date) - +new Date(b.date)), [...new Set(years)]);
+
 }

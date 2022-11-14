@@ -7,3 +7,5 @@ export type ChannelHistory = {
     total_view_count: number,
     video_count: number,
 }
+
+//type a = Pick<ChannelHistory,'id', 'channel_id'>

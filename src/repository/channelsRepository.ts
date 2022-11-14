@@ -16,14 +16,14 @@ export const find = async (selectColumnObj: Array<keyof Channel>): Promise<Chann
  * @param {*} columns { name: 'thor', age: In([20,22,29]) }
  * @returns 
  */
-export const getOneEqual = async (columns: Partial<Channel>) => {
+export const getOneEqual = async (columns: Partial<Channel>): Promise<Channel> => {
     const condition = queryHelper.transformWhereCondition(columns);
     const sql = `SELECT * FROM ${tableName} WHERE ${condition} LIMIT 1;`
     const [result] = await db.query(sql);
     return result.length === 0 ? undefined : result[0];
 }
 
-export const getManyByTitle = async (title: string) => {
+export const getManyByTitle = async (title: string): Promise<Channel[]> => {
     const [result] = await db.query(`SELECT * FROM ${tableName} WHERE title LIKE '%${title}%' LIMIT 6;`);
     return result.length === 0 ? undefined : result;
 }
@@ -56,11 +56,16 @@ export const saveOne = async (channel: Partial<Channel>) => {
 
 /**
  * UCM31rBPQdifQKUmBKtwVqBg 1qnsaks
+ * Society 엔터테이먼트, 지식/정보
  * UCMKrPB54Da-61S2Obt-S3tw 지식
+ * Society,Military 엔터테이먼트, 지식/정보
  * UCDLDbittWhk2KXvaCT0YpZQ 플레임
- * 
+ * 게임, 게임
+ * Strategy_video_game,Action-adventure_game,Action_game,Role-playing_video_game,Puzzle_video_game,Video_game_culture,Casual_game
  * 
  * UC-ohedcemUvr4Qai26n560w 혜인라밥
+ * 인물/블로그
+ * Lifestyle_(sociology) 
  * 
  * @param {*} where  { age: 200 }
  * @param {*} setColmns { name: 'thor' }

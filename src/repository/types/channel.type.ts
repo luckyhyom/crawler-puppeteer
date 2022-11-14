@@ -6,4 +6,5 @@ export type Channel = {
     thumbnail_url: string,
     published_at: string,
     category: string,
+    for_calc_revenue: number,
 }

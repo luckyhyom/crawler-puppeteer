@@ -7,14 +7,15 @@ import * as collectorService from './service/collectorService.js';
 const app = express();
 const port = config.port;
 
-app.get('/channels', async (req, res) => {
-    const result = await channelsService.getManyByTitle(req.query.title as string);
-    res.send(result);
-});
-
+// ChannelDto
 app.get('/channels/:channelId', async (req, res) => {
     const result = await channelsService.getOneByChannelId(req.params.channelId);
     return res.send(result);
+});
+
+app.get('/channels', async (req, res) => {
+    const result = await channelsService.getManyByTitle(req.query.title as string);
+    res.send(result);
 });
 
 app.get('/history/nox', async (req, res) => {
@@ -33,8 +34,12 @@ app.get('/history/view-sub/:channelId', async (req, res) => {
     return res.send(history);
 });
 
+app.get('/history/revenues/:channelId', async (req, res) => {
+    const history = await channelsService.getMonthlyRevenue(req.params.channelId);
+    return res.send(history);
+});
+
 app.get('/channel-history/:id', async (req, res) => {
-    console.log(req.params)
     res.send('Hello World!');
 });
 
