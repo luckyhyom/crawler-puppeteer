@@ -10,7 +10,7 @@ export class ChannelDto { // VO, Entity, DTO, Type
         private subscriberCount: number,
         private channelId: string,
         private publishedAt: string,
-        private category: string,
+        private category: string[],
     ) {
     }
 }
