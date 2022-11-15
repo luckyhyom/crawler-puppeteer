@@ -36,5 +36,5 @@ export async function getMany(channel_id: string): Promise<GetManyChannelHistory
     const query = `SELECT date, subscriber_count, daily_view_count FROM ${tableName} WHERE channel_id = "${channel_id}";`;
     const [result] = await db.query(query);
     return result.length === 0 ? undefined
-        : result.map((history: { date: string; subscriber: number; daily_view_count: number; }) => new GetManyChannelHistoryRes(history.date, history.subscriber, history.daily_view_count));
+        : result.map((history: { date: string; subscriber_count: number; daily_view_count: number; }) => new GetManyChannelHistoryRes(history.date, history.subscriber_count, history.daily_view_count));
 }

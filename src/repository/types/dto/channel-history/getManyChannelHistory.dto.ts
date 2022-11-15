@@ -12,5 +12,7 @@ export class GetManyChannelHistoryRes {
         const month = this.date.split('-')[1]
         return year + '-' + month
     }
-
+    getYear() {
+        return this.date.split('-')[0];
+    }
 }

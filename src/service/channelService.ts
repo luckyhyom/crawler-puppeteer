@@ -84,6 +84,8 @@ async function createChannelHistory(channel_id: string): Promise<YouTubeHistoryR
 
 export async function getHistory(channel_id: string): Promise<GetChannelHistoryRes[]> {
     const result = await channelHistoryRepository.getMany(channel_id);
+    console.log(result);
+
     return result.map((history) => new GetChannelHistoryRes(history.date, history.daily_view_count, history.subscriber_count));
 }
 
@@ -99,13 +101,13 @@ export async function getMonthlyRevenue(channel_id: string): Promise<GetChannelM
                 date: item.getMonth(),
                 profitPerShare: item.daily_view_count,
             });
-            return item.getMonth();
+            return item.getYear();
         }
         map.set(item.getMonth(), {
             date: item.getMonth(),
             profitPerShare: map.get(item.getMonth())!.profitPerShare + item.daily_view_count,
         });
-        return item.getMonth();
+        return item.getYear();
     });
 
     map.forEach((value) => {
@@ -114,5 +116,4 @@ export async function getMonthlyRevenue(channel_id: string): Promise<GetChannelM
     });
 
     return new GetChannelMonthlyRevenueRes(history.sort((a, b) => +new Date(a.date) - +new Date(b.date)), [...new Set(years)]);
-
 }
