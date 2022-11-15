@@ -22,7 +22,7 @@ export const getManyByTitle = async (title: string): Promise<ChannelDto[]> => {
             return new ChannelDto(channel.channel_id, channel.thumbnail_url, newHistory.subscriber_count, channel.channel_id, channel.published_at, newHistory.category.split(','));
         }
     });
-    const result = await Promise.all(added);;
+    const result = await Promise.all(added);
     return result;
 }
 
@@ -30,7 +30,7 @@ export const getOneByChannelId = async (channel_id: string): Promise<ChannelDto>
     const channel = await channelsRepository.getOneEqual({ channel_id });
     const history = await channelHistoryRepository.getOneEqual({ channel_id: channel.channel_id });
     const category = channel.category.split(',');
-    return new ChannelDto(channel.channel_id, channel.thumbnail_url, history.subscriber_count, channel.channel_id, channel.published_at, category);
+    return new ChannelDto(channel.title, channel.thumbnail_url, history.subscriber_count, channel.channel_id, channel.published_at, category);
 }
 
 async function createChannelsBy(title: string) {
