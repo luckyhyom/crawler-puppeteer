@@ -84,8 +84,6 @@ async function createChannelHistory(channel_id: string): Promise<YouTubeHistoryR
 
 export async function getHistory(channel_id: string): Promise<GetChannelHistoryRes[]> {
     const result = await channelHistoryRepository.getMany(channel_id);
-    console.log(result);
-
     return result.map((history) => new GetChannelHistoryRes(history.date, history.daily_view_count, history.subscriber_count));
 }
 
