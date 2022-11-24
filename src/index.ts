@@ -1,5 +1,5 @@
 import express from 'express';
-import type { ErrorRequestHandler } from "express";
+import type { ErrorRequestHandler } from 'express';
 import * as config from './config.js';
 import * as channelsService from './service/channelService.js';
 import * as collectorService from './service/collectorService.js';
@@ -11,17 +11,21 @@ function resHandler(data: any) {
     return {
         data: data,
         statusCode: 200,
-    }
+    };
 }
 
 // ChannelDto
 app.get('/channels/:channelId', async (req, res) => {
-    const result = await channelsService.getOneByChannelId(req.params.channelId);
+    const result = await channelsService.getOneByChannelId(
+        req.params.channelId
+    );
     return res.send(resHandler(result));
 });
 
 app.get('/channels', async (req, res) => {
-    const result = await channelsService.getManyByTitle(req.query.title as string);
+    const result = await channelsService.getManyByTitle(
+        req.query.title as string
+    );
     res.send(resHandler(result));
 });
 
@@ -42,7 +46,9 @@ app.get('/history/view-sub/:channelId', async (req, res) => {
 });
 
 app.get('/history/revenues/:channelId', async (req, res) => {
-    const history = await channelsService.getMonthlyRevenue(req.params.channelId);
+    const history = await channelsService.getMonthlyRevenue(
+        req.params.channelId
+    );
     return res.send(resHandler(history));
 });
 
@@ -52,7 +58,7 @@ app.get('/channel-history/:id', async (req, res) => {
 
 app.get('/test', (req, res, next) => {
     res.writeHead(301, {
-        Location: `https://makevalue.net/v5/companise`
+        Location: `https://makevalue.net/v5/companise`,
     }).end();
 });
 
